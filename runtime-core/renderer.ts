@@ -1,6 +1,6 @@
 import { Text, Fragment, ShapFlags } from './vnode'
 import { createAppApi } from './createApp'
-export function createRenderer(options) {
+export function createRenderer (options) {
   const {
     createElement: hostCreateElement, //document.createElement
     setElementText: hostSetElementText,
@@ -11,12 +11,12 @@ export function createRenderer(options) {
     remove: hostRemove,
   } = options
 
-  function render(vnode, container) {
+  function render (vnode, container) {
     patch(null, vnode, container)
   }
   // 节点的更新
   // n1虚拟节点旧节点 n2虚拟节点新节点 container真实dom容器 parentComponent父节点虚拟节点 anchor保存一个真实dom 便于insert
-  function patch(
+  function patch (
     n1,
     n2,
     container = null,
@@ -42,7 +42,7 @@ export function createRenderer(options) {
     }
   }
 
-  function processText(n1, n2, container) {
+  function processText (n1, n2, container) {
     // n1为null说明是init阶段
     // 直接create->insert
     // hostCreateText document.createTextNode创建文本节点 将新建的文本dom节点绑定到vnode的el上，再insert到容器上
@@ -58,13 +58,13 @@ export function createRenderer(options) {
     }
   }
   // 处理template
-  function processFragment(n1, n2, container) {
+  function processFragment (n1, n2, container) {
     if (!n1) {
       mountChildren(n2.children, container)
     }
   }
   // 处理元素 div p span ...
-  function processElement(n1, n2, container, anthor, parentComponent) {
+  function processElement (n1, n2, container, anthor, parentComponent) {
     if (!n1) {
       mountElement(n2, container, anthor)
     } else {
@@ -72,13 +72,13 @@ export function createRenderer(options) {
     }
   }
   // 处理组件
-  function processComponent(n1, n2, container, parentComponent) {}
-  function mountChildren(children, container) {
+  function processComponent (n1, n2, container, parentComponent) { }
+  function mountChildren (children, container) {
     children.forEach((VnodeChild) => {
       patch(null, VnodeChild, container)
     })
   }
-  function mountElement(vnode, container, anthor) {
+  function mountElement (vnode, container, anthor) {
     const { shapFlag, props } = vnode
     // 渲染element vnode的type肯定为一个html标签字符串
     // 创建一个html元素赋值给el
@@ -115,7 +115,7 @@ export function createRenderer(options) {
     // <div>
     hostInsert(el, container, anthor)
   }
-  function updateElement(n1, n2, container, anthor, parentComponent) {
+  function updateElement (n1, n2, container, anthor, parentComponent) {
     const oldProps = (n1 && n1.props) || {}
     const newProps = n2.props || {}
     const el = (n2.el = n1.el!)
@@ -124,7 +124,7 @@ export function createRenderer(options) {
     // 对比children
     patchChildren(n1, n2, el, anthor, parentComponent)
   }
-  function patchProps(el, oldProps, newProps) {
+  function patchProps (el, oldProps, newProps) {
     // 新节点新增和修改props
     // oldProps和newProps中都存在相同的key但是value改变了 {name:'xxx',age:18} {name:'xxx',age:16}
     // 此处也包含了newProps中增加了key 所以必须从newProps遍历 {name:'xxx',age:18} {name:'xxx',age:16,sex:'man'}
@@ -149,7 +149,7 @@ export function createRenderer(options) {
       }
     }
   }
-  function patchChildren(n1, n2, el, anthor, parentComponent) {
+  function patchChildren (n1, n2, el, anthor, parentComponent) {
     const { shapeFlag: prevShapFlag, children: c1 } = n1
     const { shapFlag: nextShapFlag, children: c2 } = n2
     // 如果新节点的children为文本 判断是否与旧节点相同 不同重新赋值即可
@@ -170,116 +170,153 @@ export function createRenderer(options) {
       }
     }
   }
-  function patchKeyedChildren(
+  function patchKeyedChildren (
     c1: any[],
     c2: any[],
     container,
     parentAnthor,
     parentComponent
   ) {
-    let e1=c1.length-1
-    let e2=c2.length-1
-    let i=0
-    const isSameVNodeType=(n1,n2)=>{
-     return n1.key===n2.key&&n1.type===n2.type
+    let e1 = c1.length - 1
+    let e2 = c2.length - 1
+    let i = 0
+    const isSameVNodeType = (n1, n2) => {
+      return n1.key === n2.key && n1.type === n2.type
     }
     // 此两步都是为了复用节点 相同的节点直接取代旧节点即可
     // 从左往右遍历子节点
-    while (i<=e1&&i<=e2){
-      if(!isSameVNodeType(c1[i],c2[i])){
+    while (i <= e1 && i <= e2) {
+      if (!isSameVNodeType(c1[i], c2[i])) {
         break;
       }
-      patch(c1[i],c2[i],container,parentAnthor,parentComponent)
+      patch(c1[i], c2[i], container, parentAnthor, parentComponent)
       i++
     }
     // 从右往左遍历子节点
-    while(i<=e1&&i<=e2){
-     if(!isSameVNodeType(c1[e1],c2[e2])){
-      break
-     }
-     patch(c1[e1],c2[e2],container,parentAnthor,parentComponent)
-     e1--
-     e2--
+    while (i <= e1 && i <= e2) {
+      if (!isSameVNodeType(c1[e1], c2[e2])) {
+        break
+      }
+      patch(c1[e1], c2[e2], container, parentAnthor, parentComponent)
+      e1--
+      e2--
     }
     // 此情况说明新节点多余旧节点 需要新增
     // 新增分为添加到尾部还是头部
-    if(i>e1&&i<=e2){
+    if (i > e1 && i <= e2) {
       // 通过nextPos进行参照物判断从头部插入还是尾部
-      const nextPos=e2+1
+      const nextPos = e2 + 1
       // 当前序比较时，从头部往尾部比较，在有不同节点时跳出循环
       // 此时的c2.length是不变的，c2.length永远小于nextPos，所以在尾部插入节点
       // 当后序比较时，若存在相同的节点，e2存在操作e2--
       // 此时的nextPos是小于c2.length的，给锚点anthor做参照物在头部插入节点
-      const anthor=nextPos<c2.length?c2[nextPos].el:null
-        while(i<=e2){
-          patch(null,c2[i],container,anthor)
-          i++
-        }
-    }else if(i<=e1&&i>e2){
+      const anthor = nextPos < c2.length ? c2[nextPos].el : null
+      while (i <= e2) {
+        patch(null, c2[i], container, anthor)
+        i++
+      }
+    } else if (i <= e1 && i > e2) {
       // 此时说明旧节点数量大于新节点数量
       // 此时需要删除旧节点多余的节点
-      while(i<=e1){
+      while (i <= e1) {
         hostRemove(c1[i].el)
         i++
       }
-    }else {
+    } else {
       // 此时只剩下中间存在乱序的情况 
       // a,b,[c,d,e],f,g
       // a,b,[e,c,d],f,g
-      let s1=i
-      let s2=i
-      let moved=false
-      let maxNewIndexSoFar=0
+      let s1 = i
+      let s2 = i
+      let moved = false
+      let maxNewIndexSoFar = 0
       // 用于存储新节点的key和下标index
-      const keyToNewIndexMap=new Map()
-      for(let i=s2;i<e2;i++){
-        const nextChild=c2[i]
-        keyToNewIndexMap.set(nextChild.key,i)
+      const keyToNewIndexMap = new Map()
+      for (let i = s2; i < e2; i++) {
+        const nextChild = c2[i]
+        keyToNewIndexMap.set(nextChild.key, i)
       }
       // 需要处理新节点的数量
-      const toBePatched=e2-s2+1
-      let patched=0
+      const toBePatched = e2 - s2 + 1
+      let patched = 0
       // 用于保存新节点与旧节点索引的映射 
-      const newIndexToOldIndexMap=new Array(toBePatched)
+      const newIndexToOldIndexMap = new Array(toBePatched)
       // 初始化都为0 若后面经过处理还为0则表示新值在在旧值中不存在
-      for(let i=0;i<newIndexToOldIndexMap.length;i++) newIndexToOldIndexMap[i]=i
+      for (let i = 0; i < newIndexToOldIndexMap.length; i++) newIndexToOldIndexMap[i] = i
 
       // 遍历老节点 
       // 找出旧节点存在而新节点不存在的 删除掉
       // 新旧节点都存在的 需要patch 此时的patch为了更新props 
-      for(let i=s1;i<e1;i++){
-        const prevChild=c1[i]
-        
+      for (let i = s1; i < e1; i++) {
+        const prevChild = c1[i]
         // 老节点数大于新节点的话直接删除
-        if(patched>=toBePatched){
-            hostRemove(c1[i].el)
-            continue
+        if (patched >= toBePatched) {
+          hostRemove(c1[i].el)
+          continue
         }
         // 老节点在新节点map中的下标
         // 新老节点可能只是做出了位置的移动 只有index在改变key值是不变的 
         let newIndex
-        if(prevChild.key!=null){
-          newIndex=keyToNewIndexMap.get(prevChild.key) 
-        }else {
-          for(let j=s2;j<e2;j++){
-            if(isSameVNodeType(prevChild,c2[j])){
-              newIndex=j
+        if (prevChild.key != null) {
+          newIndex = keyToNewIndexMap.get(prevChild.key)
+        } else {
+          for (let j = s2; j < e2; j++) {
+            if (isSameVNodeType(prevChild, c2[j])) {
+              newIndex = j
               break
             }
           }
         }
-        
         // 在新节点索引中未发现旧节点的 说明旧节点被删除
-        if(newIndex===undefined){
+        if (newIndex === undefined) {
           hostRemove(prevChild.el)
-        }else {
+        } else {
           // 新旧节点都存在
           // 保存新旧节点索引的映射
           // newIndex->新节点的索引 s2->新节点的起始坐标 i->旧节点的索引
-          // AB(CDEF)HG AB(DCSE)HG
+          // AB(CDEF)HG AB(DCSE)HG 
           // [4,3,0,5] +1是因为i可能为0 需要用0判断新节点是否新建的 
           // 0就表明此映射的节点为新建节点
-          newIndexToOldIndexMap[newIndex-s2]=i+1
+          newIndexToOldIndexMap[newIndex - s2] = i + 1
+
+          // 老节点所在新节点中的索引值
+          // 遍历将比较每个节点的索引 
+          // 如果一直是升序则表明没有移动
+          // 否者就命中 此节点进行了移动
+          // 新节点的索引map {A:0,B:1,D:2,C:3,E:4,F:5}
+          // 旧节点 [A,B,C,D,Y,F]
+          // 新旧节点的映射[1,2,4,3,0,6] 如果未进行移动[1,2,3,4,5,6]
+          if (newIndex >= maxNewIndexSoFar) {
+            maxNewIndexSoFar = newIndex
+          } else {
+            moved = true
+          }
+          patch(prevChild, c2[newIndex], container, null, parentComponent)
+          patched++
+        }
+      }
+
+      // 求新老节点的索引映射最长递增子序列 返回下标 [1,2,4,3,5] [1,2,3,5] result:[0,1,3,4]
+      const increasingNewIndexSequence = moved ? getSequence(newIndexToOldIndexMap) : []
+      let j = increasingNewIndexSequence.length - 1
+
+      // 倒序遍历需要处理新节点->为了插入时确定锚点anthor
+      // 锚点为插入节点的后一个节点->insert函数使用的insertBefore
+      for (let i = toBePatched - 1; i >= 0; i--) {
+        const nextIndex = s2 + i
+        const nextChild = c2[nextIndex]
+        const anthor = nextIndex + 1 < c2.length ? c2[nextIndex + 1].el : parentComponent
+        // 新旧节点映射为0时表示需要新建
+        if (newIndexToOldIndexMap[i] === 0) {
+          patch(null, nextChild, container, anthor, parentComponent)
+        } else if (moved) {
+          // j<0表示没有最长递增子序列 全都发生移动
+          // ABCDEFGHJ  ABDCFGHEJ  i=5 [0,1,3,4,5,6,8]
+          if (j < 0 || increasingNewIndexSequence[j] !== i) {
+            hostInsert(c2[nextChild].el, container, anthor)
+          } else {
+            j--
+          }
         }
       }
     }
@@ -289,4 +326,44 @@ export function createRenderer(options) {
     // 用于初始化根节点 const app=createApp(App) App为App.vue
     createApp: createAppApi(render),
   }
+}
+function getSequence (arr: number[]): number[] {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
 }
