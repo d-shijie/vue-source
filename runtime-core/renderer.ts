@@ -20,8 +20,8 @@ export function createRenderer(options) {
     n1,
     n2,
     container = null,
+    anchor = null,
     parentComponent = null,
-    anchor = null
   ) {
     // 根据n2判断 因为n2是新节点
     const { shapFlag, type } = n2
@@ -35,7 +35,7 @@ export function createRenderer(options) {
         break
       default:
         if (shapFlag & ShapFlags.ELEMENT) {
-          processElement(n1, n2, container, parentComponent, anchor)
+          processElement(n1, n2, container, anchor, parentComponent)
         } else if (shapFlag & ShapFlags.STATEFUL_COMPONENT) {
           processComponent(n1, n2, container, parentComponent)
         }
@@ -64,11 +64,11 @@ export function createRenderer(options) {
     }
   }
   // 处理元素 div p span ...
-  function processElement(n1, n2, container, parentComponent, anthor) {
+  function processElement(n1, n2, container, anthor, parentComponent) {
     if (!n1) {
       mountElement(n2, container, anthor)
     } else {
-      updateElement(n1, n2, container, parentComponent, anthor)
+      updateElement(n1, n2, container, anthor, parentComponent)
     }
   }
   // 处理组件
@@ -115,7 +115,7 @@ export function createRenderer(options) {
     // <div>
     hostInsert(el, container, anthor)
   }
-  function updateElement(n1, n2, container, parentComponent, anthor) {
+  function updateElement(n1, n2, container, anthor, parentComponent) {
     const oldProps = (n1 && n1.props) || {}
     const newProps = n2.props || {}
     const el = (n2.el = n1.el!)
@@ -189,7 +189,7 @@ export function createRenderer(options) {
       if(!isSameVNodeType(c1[i],c2[i])){
         break;
       }
-      patch(c1[i],c2[i],container,parentComponent,parentAnthor)
+      patch(c1[i],c2[i],container,parentAnthor,parentComponent)
       i++
     }
     // 从右往左遍历子节点
@@ -197,7 +197,7 @@ export function createRenderer(options) {
      if(!isSameVNodeType(c1[e1],c2[e2])){
       break
      }
-     patch(c1[e1],c2[e2],container,parentComponent,parentAnthor)
+     patch(c1[e1],c2[e2],container,parentAnthor,parentComponent)
      e1--
      e2--
     }
@@ -279,7 +279,6 @@ export function createRenderer(options) {
           // AB(CDEF)HG AB(DCSE)HG
           // [4,3,0,5] +1是因为i可能为0 需要用0判断新节点是否新建的 
           // 0就表明此映射的节点为新建节点
-          
           newIndexToOldIndexMap[newIndex-s2]=i+1
         }
       }
