@@ -1,5 +1,6 @@
 import { Text, Fragment, ShapFlags } from './vnode'
 import { createAppApi } from './createApp'
+import { createComponentInstance, setupComponent } from './component'
 export function createRenderer (options) {
   const {
     createElement: hostCreateElement, //document.createElement
@@ -72,7 +73,13 @@ export function createRenderer (options) {
     }
   }
   // 处理组件
-  function processComponent (n1, n2, container, parentComponent) { }
+  function processComponent (n1, n2, container, parentComponent) {
+    if (!n1) {
+      mountComponent(n2, container, parentComponent)
+    } else {
+      updateComponent(n1, n2, container)
+    }
+  }
   function mountChildren (children, container) {
     children.forEach((VnodeChild) => {
       patch(null, VnodeChild, container)
@@ -242,7 +249,7 @@ export function createRenderer (options) {
       // 用于保存新节点与旧节点索引的映射 
       const newIndexToOldIndexMap = new Array(toBePatched)
       // 初始化都为0 若后面经过处理还为0则表示新值在在旧值中不存在
-      for (let i = 0; i < newIndexToOldIndexMap.length; i++) newIndexToOldIndexMap[i] = i
+      for (let i = 0; i < newIndexToOldIndexMap.length; i++) newIndexToOldIndexMap[i] = 0
 
       // 遍历老节点 
       // 找出旧节点存在而新节点不存在的 删除掉
@@ -320,6 +327,13 @@ export function createRenderer (options) {
         }
       }
     }
+  }
+  function mountComponent (vnode, container, parentComponent) {
+    const instance = (vnode.component = createComponentInstance(vnode, container))
+    setupComponent(instance)
+  }
+  function updateComponent (n1, n2, container) {
+
   }
   return {
     render,

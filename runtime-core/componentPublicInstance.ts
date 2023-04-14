@@ -10,4 +10,30 @@ const publicPropertiesMap = {
   $emit: (i) => i.emit,
 }
 // 需要用户在render函数中通过使用this触发proxy
-export const PublicInstanceProxyHandlers = {}
+//  setup(props,context){
+//  此时return的对象就是setupState 
+//  return {
+//  }
+// }
+export const PublicInstanceProxyHandlers = {
+  get ({ _: instance }, key) {
+    const { setupState, props } = instance
+    if (key[0] !== '$') {
+      if (hasOwn(setupState, key)) {
+        return setupState[key]
+      } else if (hasOwn(props, key)) {
+        return props[key]
+      }
+    }
+    const publicGetter = publicPropertiesMap[key]
+    if (publicGetter) return publicGetter(instance)
+  },
+  set ({ _: instance }, key, value) {
+    // 只修改setup的返回值即可 因为props只读
+    const { setupState } = instance
+    if (hasOwn(instance, key)) {
+      setupState[key] = value
+    }
+    return true
+  }
+}
