@@ -1,6 +1,8 @@
-import { Text, Fragment, ShapFlags } from './vnode'
+import { Text, Fragment, ShapFlags, normalizeVNode } from './vnode'
 import { createAppApi } from './createApp'
 import { createComponentInstance, setupComponent } from './component'
+import { shouldUpdateComponent } from './componentRenderUtils'
+import { effect } from '../reactivity/effect'
 export function createRenderer (options) {
   const {
     createElement: hostCreateElement, //document.createElement
@@ -330,10 +332,50 @@ export function createRenderer (options) {
   }
   function mountComponent (vnode, container, parentComponent) {
     const instance = (vnode.component = createComponentInstance(vnode, container))
+    // 加工instance 创建实例后初始化instance的内部属性
     setupComponent(instance)
+    setupRenderEffect(instance, vnode, container)
   }
   function updateComponent (n1, n2, container) {
-
+    const instance = (n2.component = n1.component)
+    if (shouldUpdateComponent(n1, n2)) {
+      instance.next = n2
+      instance.update()
+    } else {
+      n2.component = n1.component
+      n2.el = n1.el
+      instance.vnode = n2
+    }
+  }
+  function setupRenderEffect (instance, vnode, container) {
+    function componentUpdateFn () {
+      if (!instance.mounted) {
+        const proxtToUse = instance.proxy
+        const subTree = (instance.subTree = normalizeVNode(instance.render.call(proxtToUse, proxtToUse)))
+        patch(null, subTree, container, null, instance)
+        vnode.el = subTree.el
+        instance.mounted = true
+      } else {
+        const { next, vnode } = instance
+        if (next) {
+          next.el = vnode.el
+          updateComponentPreRender(instance, next)
+        }
+        const proxtToUse = instance.proxy
+        const nextTree = (instance.subTree = normalizeVNode(instance.render.call(proxtToUse, proxtToUse)))
+        const prevTree = instance.subTree
+        instance.subTree = nextTree
+        patch(prevTree, nextTree, container, null, instance)
+      }
+    }
+    instance.update = effect(componentUpdateFn, {})
+  }
+  function updateComponentPreRender (instance, nextVode) {
+    nextVode.componetn = instance
+    instance.vnode = nextVode
+    instance.next = null
+    const { props } = nextVode
+    instance.props = props
   }
   return {
     render,
