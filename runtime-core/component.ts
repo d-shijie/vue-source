@@ -35,7 +35,7 @@ export function setupComponent (instance) {
   setupStatefulComponent(instance)
 }
 function setupStatefulComponent (instance) {
-  // 代理实例的ctx属性 ctx又是存放了当前组件的实例
+  // 代理实例的ctx属性 ctx存放了当前组件的实例
   instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers)
   // 组件类型的vnode的type属性就是此组件 
   // export default { setup(props,context){ return{} } }

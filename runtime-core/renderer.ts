@@ -334,24 +334,33 @@ export function createRenderer (options) {
     const instance = (vnode.component = createComponentInstance(vnode, container))
     // 加工instance 创建实例后初始化instance的内部属性
     setupComponent(instance)
+    // 给实例的update函数赋值 方便更新使用
     setupRenderEffect(instance, vnode, container)
   }
   function updateComponent (n1, n2, container) {
     const instance = (n2.component = n1.component)
+    // 根据props判断是否进行组件更新
     if (shouldUpdateComponent(n1, n2)) {
+      // 新节点就是n2
       instance.next = n2
+      // update就是调用了effect
       instance.update()
     } else {
+      // 不更新实例 但是进行交接
       n2.component = n1.component
       n2.el = n1.el
       instance.vnode = n2
     }
   }
   function setupRenderEffect (instance, vnode, container) {
+    // effect的回调 需要用到的更新函数
     function componentUpdateFn () {
       if (!instance.mounted) {
-        const proxtToUse = instance.proxy
-        const subTree = (instance.subTree = normalizeVNode(instance.render.call(proxtToUse, proxtToUse)))
+        // 可在render函数中使用this使用proxy proxy中存在_属性存放组件实例
+        const proxyToUse = instance.proxy
+        // 真正要使用的是 instance.render 真正的虚拟节点
+        const subTree = (instance.subTree = normalizeVNode(instance.render.call(proxyToUse, proxyToUse)))
+        // n1为null代表挂载
         patch(null, subTree, container, null, instance)
         vnode.el = subTree.el
         instance.mounted = true
@@ -362,6 +371,7 @@ export function createRenderer (options) {
           updateComponentPreRender(instance, next)
         }
         const proxtToUse = instance.proxy
+        // 更新新旧虚拟节点
         const nextTree = (instance.subTree = normalizeVNode(instance.render.call(proxtToUse, proxtToUse)))
         const prevTree = instance.subTree
         instance.subTree = nextTree
@@ -371,7 +381,7 @@ export function createRenderer (options) {
     instance.update = effect(componentUpdateFn, {})
   }
   function updateComponentPreRender (instance, nextVode) {
-    nextVode.componetn = instance
+    nextVode.component = instance
     instance.vnode = nextVode
     instance.next = null
     const { props } = nextVode
