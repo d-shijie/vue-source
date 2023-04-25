@@ -370,9 +370,9 @@ export function createRenderer (options) {
           next.el = vnode.el
           updateComponentPreRender(instance, next)
         }
-        const proxtToUse = instance.proxy
+        const proxyToUse = instance.proxy
         // 更新新旧虚拟节点
-        const nextTree = (instance.subTree = normalizeVNode(instance.render.call(proxtToUse, proxtToUse)))
+        const nextTree = (instance.subTree = normalizeVNode(instance.render.call(proxyToUse, proxyToUse)))
         const prevTree = instance.subTree
         instance.subTree = nextTree
         patch(prevTree, nextTree, container, null, instance)
